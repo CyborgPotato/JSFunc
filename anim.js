@@ -1,40 +1,45 @@
 (function(window, document) {
   var O = function(sel,cont) {
     return new getNodes(sel,cont);
-  },pI = parseInt
-  ,pIs = function(val) {
-    return val.match(/(\d[\d\.]*)/g);
-  },atrVal = function(val,parent,per) {
-    let w=window.innerWidth,
-    h=window.innerHeight,
-    f=document.createElement('div').style.fontSize;
-    if (typeof val == 'string') {
-      if (val.endsWith("%")&&!parent&&!per)return pI(val)/100*w+'px';
-      else if (val.endsWith("%")&&!parent&&per)return pI(val)/100*atrVal(per)+'px';
-      else if (val.endsWith("%")&&parent&&per)return pI(val)/100*atrVal(parent[per])+'px';
-      else if (val.endsWith("%")&&parent&&!per){console.error("Provide 'per' for : atrVal(val,parent,per)");return null;}
-      else if (val.endsWith("px")) return pI(val)+'px';
-      else if (val.endsWith("em")) return pI(val)*fs+'px';
-      else if (val.endsWith("vw")) return pI(val)/100*w+'px';
-      else if (val.endsWith("vh")) return pI(val)/100*h+'px';
-      else { let x = pIs(val);x.forEach(function(e){e=pI(e)});return x;}
-    }else if (typeof val == 'number') return val+'px';
-  },isPx = function(val) {
-    if (typeof val == 'string') {
-      if (val.endsWith("%"))return 1;
-      else if (val.endsWith("px")) return 1;
-      else if (val.endsWith("em")) return 1;
-      else if (val.endsWith("vw")) return 1;
-      else if (val.endsWith("vh")) return 1;
-      else return 0;
-    }else if (typeof val == 'number') return 0;
+  },sCs = function(atr,val,par) {
+    par.style[atr] = val;
+  },sAt = function(atr,val,par) {
+    par.setAttribute(atr, val);
+  },gCs = function(atr,par) {
+    return par.style[atr];
+  },gAt = function(atr,par) {
+    return par.getAttribute(atr);
+  },pxVal = function(atr,par,hOw) {
+    var w=window.innerWidth,h=window.innerHeight,m=w>h?w:h,mn=w>h?h:w;
+    if (typeof atr=='string') {
+    switch (atr.match(/[^0-9.]/gi)) {
+        case 'px':
+          return parseInt(parseInt(atr));
+        case '%':
+          return parseInt(parseInt(atr)/100*hOw=='width'?getComputedStyle(par.parentNode)[p]:hOw=='height'?getComputedStyle(par.parentNode):100);
+        case 'vw':
+          return parseInt(parseInt(atr)/100*w);
+        case 'vh':
+          return parseInt(parseInt(atr)/100*h);
+        case 'vmin':
+          return parseInt(parseInt(atr)/100*mn);
+        case 'vmax':
+          return parseInt(parseInt(atr)/100*m);
+        case 'em':
+          return val;
+        case 'vw':
+          return parseInt(parseInt(atr)/100*w);
+        case null:
+          return parseInt(atr);
+      }
+    }
+    return parseInt(atr);
   },getNodes = function(sel,cont) {
     if(typeof sel == 'string') {
       if(cont==undefined)cont=document;
-      let nds = cont.querySelectorAll(sel);
+      var nds = cont.querySelectorAll(sel);
       for (var i = 0; i < nds.length; i++) {
         this[i] = nds[i];
-        console.log(this);
       }
       this.l = nds.length;
     }else if (sel instanceof HTMLElement || sel instanceof Node) {
@@ -47,62 +52,93 @@
     }
   };
   O.fn = getNodes.prototype = {
-    css: function() {
-      this.chg='css';
-      return this;
-    },
-    atr: function() {
-      this.chg='atr';
-      return this;
-    },
-    anim: function(prop,time,how) { /*FORMAT : {property: value}*/
-      if(!time)time=1000;
-      if(!how)how='linear';
-      let start = null;
-      let end={};
-      for (p in prop) {
-        end[p]=this.get(p);
+    css: function(sets) { /*FORMAT: {property: value}*/
+    for (var i = 0; i < this.l; i++) {
+      for (p in sets) {
+        sCs(p,sets[p],this[i]);
       }
-      function an(t) {
-        if(!start)start=t;
-        if (how=='linear') {
-          for (p in prop) {
-            if(isPx(prop[p]))
-          }
-        }
-        if(t-start<time)window.requestAnimationFrame(an);
-      }
-      window.requestAnimationFrame(an);
-    },
-    set: function(atr,val) {
-      if (this.chg==='css') {
-        for (let i = 0; i < this.l; i++) {
-          this[i].style[atr] = val;
-      }
-      }else if (this.chg==='atr') {
-        for (let i = 0; i < this.l; i++) {
-          this[i].setAttribute(atr, val);
-        }
-      }else {
-        console.error("Error in object : "+this+" please specify css or atr");
-      }
-      return this;
-    },
-    get: function(atr) {
-      let val=[];
-      if (this.chg==='css') {
-        for (let i = 0; i < this.l; i++) {
-          val[i]=this[i].style[atr];
-        }
-      }else if (this.chg==='atr') {
-        for (let i = 0; i < this.l; i++) {
-          val[i]=this[i].getAttribute(atr);
-        }
-      }else {
-        console.error("Error in object : "+this+" please specify css or atr");
-      }
-      return val;
     }
-}
-window.O = O;
+    return this;
+    },
+    atr: function(sets) { /*FORMAT: {property: value}*/
+      for (var i = 0; i < this.l; i++) {
+      for (p in sets) {
+        sAt(p,sets[p],this[i]);
+      }
+    }
+    return this;
+    },
+    anim: function(sets,time,style) { /*FORMAT: {property: value}*/
+    if(!time)time=1000;
+    if(time=='fast')time=1000;
+    if(time=='slow')time=2000;
+    if(style==null)style='linear';
+    if(style!='linear'&&style!='cubic') console.error("Style '"+style+"' not defined");
+    var c=0,t,csOrAt,
+        diff={},
+        sType={};/*Is it of type string or number*/
+    for (p in sets) {
+      csOrAt=getComputedStyle(this[0])[p] ? 'css' : 'atr';
+      sType[p] = typeof sets[p]=='string' ? sets[p].match(/[^0-9.]/gi) ? sets[p].match(/[^0-9.]/gi)=='rgb(,,)'?'rgb':'px':'n':'n'; //Check of set value is a number : 100 | '100', or a string : '10px'
+      sets[p] = sType[p]=='n'?sets[p]//Is it a number? Keep it the same
+                :sType[p]=='px'?sets[p]://Is it a pixel type? Convert it to such
+                sType[p]=='rgb(,,)'?'NOT DONE YET':null//rgb animation function not added yet...
+      for (var i = 0; i < this.l; i++) {
+        if (csOrAt=='css') {
+          diff[p+i]=pxVal(sets[p],this[i],p)-pxVal(getComputedStyle(this[0])[p],this[i],p);
+          diff[i+p]=getComputedStyle(this[0])[p];
+        }
+        else if (csOrAt=='atr') {
+          diff[p+i]=pxVal(sets[p],this[i],p)-pxVal(this[i].getAttribute(p),this[i],p);
+          diff[i+p]=this[i].getAttribute(p);
+        }
+        else;
+      }
+      // var csOrAt=getComputedStyle(this[0])[p] ? 'css' : 'atr';
+      // sEnd[p] = typeof sets[p]=='string' ? sets[p].match(/[^0-9.]/gi).join('') : null; /*Retrieve all the endings of the values*/
+      // for (var i = 0; i < this.l; i++)
+      //   if (csOrAt=='css')
+      //     sEnd[p+i]=getComputedStyle(this[0])[p].match(/[^0-9.]/gi).join('');
+      //   else if (csOrAt=='atr')
+      //     sEnd[p+i]=this[i].getAttribute(p);
+    }
+    var e=this;
+    function ani (timeStamp) {
+      if(!t)t=timeStamp;
+      c=(timeStamp-t)/time;
+      for (p in sets) {
+        csOrAt=getComputedStyle(e[0])[p] ? 'css' : 'atr';
+        for (var i=0;i<e.l;i++) {
+          if (e[i].getAttribute('isAnim')) {
+            e[i].removeAttribute('isAnim');
+            e.l--;
+            for (;i<e.l;i++) {
+              e[i]=e[i+1]
+            }
+            delete e[e.l+1]
+          }
+          if (csOrAt==='css') {
+            e[i].style[p]=(pxVal(diff[i+p])+c*(pxVal(diff[p+i]))).toString()+sType[p];
+          }
+          else if (csOrAt==='atr') {
+            if (c<1)
+              e[i].setAttribute(p, pxVal(diff[i+p])+c*(pxVal(diff[p+i])));
+            else
+              e[i].setAttribute(p, pxVal(sets[p]));
+          }else;
+        }
+      }
+      if(c<1)window.requestAnimationFrame(ani);
+      else;
+    }
+    window.requestAnimationFrame(ani);
+    return this;
+    },
+    stop: function() {
+      for (var i = 0; i < this.l; i++) {
+        this[i].setAttribute('isAnim', 'true');
+      }
+    }
+  }
+  window.O = O;
 })(window, document);

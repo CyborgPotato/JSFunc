@@ -1,1 +1,9 @@
-O(".orbit").atr().anim({speed: "20px"});
+function changeWidth () {
+  O("#centre").anim({width:"1000%"},5000);
+}
+function norm () {
+  O("#centre").stop();
+}
+function n () {
+
+}
