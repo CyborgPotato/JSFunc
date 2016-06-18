@@ -43,8 +43,8 @@
         y=Math.sin(rad);/*Get the current Y ratio*/
         e.style.left = x*d*100*tiltY+50+'%';
         e.style.top = y*d*100*tiltX+50+'%';
-        if(rad>pi)e.style.zIndex='-1';
-        else e.style.zIndex='3';
+        // if(rad>pi)e.style.zIndex='-1';
+        // else e.style.zIndex='3';
         if(rad>=pi*2)rad=0;
         e.setAttribute('rad', rad);
         if(!e.getAttribute('speed'))e.setAttribute('speed', 1);

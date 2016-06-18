@@ -17,9 +17,20 @@
   box-shadow: 0px 0px 5px 4px black;
 }
 #centre > .orbit {
-  background-color: rgb(255, 255, 255);
+  background-color: rgb(0, 255, 255);
   width:5vmax;
   height:5vmax;
   border-radius:100%;
   box-shadow: 0px 0px 5px 4px black;
+}
+.toolTip {
+  display: none;
+  opacity: 0;
+  border-radius: 10%;
+  position: absolute;
+  width:15vmax;
+  height:12vmax;
+  left:90%;
+  top:90%;
+  background-color: rgb(0, 0, 0);
 }
