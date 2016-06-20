@@ -11,7 +11,7 @@
 #over {
   width: 100%;
   height: 100%;
-  background-image: url(favicon.ico);
+  background-image: url('../favicon.ico');
   background-size: cover;
   border-radius: 100%;
   box-shadow: 0px 0px 5px 4px black;
@@ -28,8 +28,8 @@
   opacity: 0;
   border-radius: 10%;
   position: absolute;
-  width:15vmax;
-  height:12vmax;
+  width:0px;
+  height:0px;
   left:90%;
   top:90%;
   background-color: rgb(0, 0, 0);

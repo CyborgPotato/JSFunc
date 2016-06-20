@@ -6,34 +6,35 @@
   },sAt = function(atr,val,par) {
     par.setAttribute(atr, val);
   },gCs = function(atr,par) {
-    return par.style[atr];
+    return window.getComputedStyle(par)[atr];
   },gAt = function(atr,par) {
     return par.getAttribute(atr);
   },pxVal = function(atr,par,hOw) {
     var w=window.innerWidth,h=window.innerHeight,m=w>h?w:h,mn=w>h?h:w;
     if (typeof atr=='string') {
-      switch (atr.match(/[^0-9.]/gi)) {
+      var end = atr.match(/[^0-9.]/gi)?atr.match(/[^0-9.]/gi).join(''):atr.match(/[^0-9.]/gi);
+      switch (end) {
         case 'px':
-        return parseInt(parseInt(atr));
+        return parseFloat(parseFloat(atr));
         case '%':
-        return parseInt(parseInt(atr)/100*hOw=='width'?getComputedStyle(par.parentNode)[p]:hOw=='height'?getComputedStyle(par.parentNode):100);
+        return parseFloat(parseFloat(atr)/100*hOw=='width'?getComputedStyle(par.parentNode)[p]:hOw=='height'?getComputedStyle(par.parentNode):100);
         case 'vw':
-        return parseInt(parseInt(atr)/100*w);
+        return parseFloat(parseFloat(atr)/100*w);
         case 'vh':
-        return parseInt(parseInt(atr)/100*h);
+        return parseFloat(parseFloat(atr)/100*h);
         case 'vmin':
-        return parseInt(parseInt(atr)/100*mn);
+        return parseFloat(parseFloat(atr)/100*mn);
         case 'vmax':
-        return parseInt(parseInt(atr)/100*m);
+        return parseFloat(parseFloat(atr)/100*m);
         case 'em':
         return val;
         case 'vw':
-        return parseInt(parseInt(atr)/100*w);
+        return parseFloat(parseFloat(atr)/100*w);
         case null:
-        return parseInt(atr);
+        return parseFloat(atr);
       }
     }
-    return parseInt(atr);
+    return parseFloat(atr);
   },getNodes = function(sel,cont) {
     if(typeof sel == 'string') {
       if(cont==undefined)cont=document;
@@ -52,18 +53,26 @@
     }
   };
   O.fn = getNodes.prototype = {
-    css: function(sets) { /*FORMAT: {property: value}*/
-    for (var i = 0; i < this.l; i++) {
-      for (p in sets) {
-        sCs(p,sets[p],this[i]);
+    set: function(sets) { /*FORMAT: {property: value}*/
+    for (p in sets) {
+      var csOrAt=getComputedStyle(this[0])[p] ? 'css' : 'atr';
+      for (var i = 0; i < this.l; i++) {
+        if (csOrAt=='css')
+          sCs(p,sets[p],this[i]);
+        else
+          sAt(p,sets[p],this[i]);
       }
     }
     return this;
   },
-  atr: function(sets) { /*FORMAT: {property: value}*/
+  rem: function(sets) { /*FORMAT: {property: value}*/
   for (var i = 0; i < this.l; i++) {
     for (p in sets) {
-      sAt(p,sets[p],this[i]);
+      var csOrAt=getComputedStyle(this[0])[p] ? 'css' : 'atr';
+      if (csOrAt=='css')
+        sCs(p,null,this[i]);
+      else
+        this[i].removeAttribute(p);
     }
   }
   return this;
@@ -86,12 +95,12 @@ for (p in sets) {
   sType[p]=='rgb(,,)'?'NOT DONE YET':null//rgb animation function not added yet...
   for (var i = 0; i < this.l; i++) {
     if (csOrAt=='css') {
-      diff[p+i]=pxVal(sets[p],this[i],p)-pxVal(getComputedStyle(this[0])[p],this[i],p);
-      diff[i+p]=getComputedStyle(this[0])[p];
+      diff[p+i]=pxVal(sets[p],this[i],p)-pxVal(gCs(p,this[i]),this[i],p);
+      diff[i+p]=gCs(p,this[i]);
     }
     else if (csOrAt=='atr') {
-      diff[p+i]=pxVal(sets[p],this[i],p)-pxVal(this[i].getAttribute(p),this[i],p);
-      diff[i+p]=this[i].getAttribute(p);
+      diff[p+i]=pxVal(sets[p],this[i],p)-pxVal(gAt(p,this[i]),this[i],p);
+      diff[i+p]=gAt(p,this[i]);
     }
     else;
   }
@@ -113,8 +122,8 @@ function ani (timeStamp) {
       if (e[i].getAttribute('isAnim')=='false') {
         e[i].removeAttribute('isAnim');
         e.l--;
-        for (;i<e.l;i++) {
-          e[i]=e[i+1]
+        for (var k=i;k<e.l;k++) {
+          e[k]=e[k+1]
         }
         delete e[e.l+1]
       }
@@ -139,7 +148,7 @@ function ani (timeStamp) {
     }
   }
   if(c<1)window.requestAnimationFrame(ani);
-  else atEnd.call();
+  else {atEnd();}
 }
 window.requestAnimationFrame(ani);
 return this;
@@ -157,6 +166,19 @@ on: function(click,func) {
     this[i].addEventListener(click,func);
   }
   return this;
+},
+addElem: function(t,c) {
+  for (var i = 0; i < this.l; i++) {
+    var e = document.createElement(t);
+    e.setAttribute('class', c);
+    this[i].appendChild(e);
+  }
+  return this;
+},
+each: function(fn) {
+  for (var i = 0; i < this.l; i++) {
+    fn.call(this[i]);
+  }
 }
 }
 window.O = O;
